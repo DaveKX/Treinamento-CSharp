@@ -1,0 +1,103 @@
+﻿@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+
+@page "/cadastro"
+@rendermode InteractiveServer
+@inject ILocalStorageService localStorage
+
+<PageTitle>Cadastro</PageTitle>
+
+<MudGrid>
+    <MudItem xs="12" sm="7">
+        <MudPaper Class="pa-4">
+            <MudForm @ref="form" Model="@pessoa" @bind-IsValid="@success">
+                <MudTextField T="string" Label="Nome" For="@(() => pessoa.Nome)" @bind-Value="@pessoa.Nome" Required="true" Immediate="true" />
+                <MudTextField T="string" Label="Telefone" For="@(() => pessoa.Telefone)" @bind-Value="@pessoa.Telefone" Required="true" Immediate="true" />
+                <MudTextField T="string" Label="Endereço" For="@(() => pessoa.Endereço)" @bind-Value="@pessoa.Endereço" Required="true" Immediate="true" />
+            </MudForm>
+        </MudPaper>
+        <MudPaper Class="pa-4 mt-4">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" DropShadow="false" OnClick="AddPessoa">Salvar</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" DropShadow="false" OnClick="ResetForm" Class="mx-2">Reset</MudButton>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@if (pessoas == null)
+{
+    <MudProgressCircular Color="Color.Success" Indeterminate="true" />
+}
+else
+{
+    <MudTable Items="pessoas" Hover="true" SortLabel="Sort By" Elevation="0" AllowUnsorted="false">
+        <HeaderContent>
+            <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<Pessoa, object>(x=>x.Nome)">Nome</MudTableSortLabel></MudTh>
+            <MudTh>Telefone</MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Pessoa, object>(x=>x.Endereço)">Endereço</MudTableSortLabel></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Nome">@context.Nome</MudTd>
+            <MudTd DataLabel="Telefone">@context.Telefone</MudTd>
+            <MudTd DataLabel="Endereço">@context.Endereço</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[]{10, 100}" />
+        </PagerContent>
+    </MudTable>
+}
+
+
+@code {
+    bool success;
+    MudForm form;
+    List<Pessoa> pessoas = new();
+    Pessoa pessoa = new();
+    const string stringKey = "pessoas";
+    bool isInitialized;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadPessoasFromLocalStorage();
+            isInitialized = true;
+        }
+    }
+
+    private async Task LoadPessoasFromLocalStorage()
+    {
+        await Task.Delay(100);
+        var storedPessoas = await localStorage.GetItemAsync<List<Pessoa>>(stringKey);
+        if (storedPessoas != null)
+        {
+            pessoas = storedPessoas;
+        }
+        else
+        {
+            pessoas = new List<Pessoa>();
+        }
+        StateHasChanged();
+    }
+
+    private async Task AtualizaLocalStorage()
+    {
+        await localStorage.SetItemAsync(stringKey, pessoas);
+    }
+
+    private async Task AddPessoa()
+    {
+        if (form.IsValid)
+        {
+            pessoas.Add(pessoa);
+            await AtualizaLocalStorage();
+            pessoa = new();
+            await form.ResetAsync();
+        }
+    }
+
+    private async Task ResetForm()
+    {
+        await form.ResetAsync();
+        pessoa = new();
+    }
+}
