@@ -1,24 +1,21 @@
 ﻿@using System.Text.RegularExpressions
 @using System.ComponentModel.DataAnnotations
 
+<MudDialogProvider />
+
 @page "/cadastro"
 @rendermode InteractiveServer
 @inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+
 
 <PageTitle>Cadastro</PageTitle>
 
 <MudGrid>
     <MudItem xs="12" sm="7">
-        <MudPaper Class="pa-4">
-            <MudForm @ref="form" Model="@pessoa" @bind-IsValid="@success">
-                <MudTextField T="string" Label="Nome" For="@(() => pessoa.Nome)" @bind-Value="@pessoa.Nome" Required="true" Immediate="true" />
-                <MudTextField T="string" Label="Telefone" For="@(() => pessoa.Telefone)" @bind-Value="@pessoa.Telefone" Required="true" Immediate="true" />
-                <MudTextField T="string" Label="Endereço" For="@(() => pessoa.Endereço)" @bind-Value="@pessoa.Endereço" Required="true" Immediate="true" />
-            </MudForm>
-        </MudPaper>
         <MudPaper Class="pa-4 mt-4">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" DropShadow="false" OnClick="AddPessoa">Salvar</MudButton>
-            <MudButton Variant="Variant.Filled" Color="Color.Secondary" DropShadow="false" OnClick="ResetForm" Class="mx-2">Reset</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" DropShadow="false" OnClick="OpenDialogCadastro">Adicionar</MudButton>
+            @* <MudButton Variant="Variant.Filled" Color="Color.Error" DropShadow="false" OnClick="ClearDB">Clear DB</MudButton> *@
         </MudPaper>
     </MudItem>
 </MudGrid>
@@ -29,31 +26,89 @@
 }
 else
 {
-    <MudTable Items="pessoas" Hover="true" SortLabel="Sort By" Elevation="0" AllowUnsorted="false">
-        <HeaderContent>
-            <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<Pessoa, object>(x=>x.Nome)">Nome</MudTableSortLabel></MudTh>
-            <MudTh>Telefone</MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<Pessoa, object>(x=>x.Endereço)">Endereço</MudTableSortLabel></MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Nome">@context.Nome</MudTd>
-            <MudTd DataLabel="Telefone">@context.Telefone</MudTd>
-            <MudTd DataLabel="Endereço">@context.Endereço</MudTd>
-        </RowTemplate>
-        <PagerContent>
-            <MudTablePager PageSizeOptions="new int[]{10, 100}" />
-        </PagerContent>
-    </MudTable>
+    <MudDataGrid Items="@pessoas" ReadOnly="false" SortMode="@SortMode.Single" EditMode="DataGridEditMode.Form">
+        <Columns>
+            <PropertyColumn Property="x => x.Id" Title="ID" Editable="false" />
+            <PropertyColumn Property="x => x.Nome" />
+            <PropertyColumn Property="x => x.Telefone" />
+            <PropertyColumn Property="x => x.Endereço" />
+            <TemplateColumn CellClass="d-flex justify-center">
+                <CellTemplate>
+                    <MudStack Row>
+                        <MudButton Size="@Size.Small" Variant="@Variant.Filled" Color="@Color.Primary" OnClick="() => OpenDialogEditarPessoa(context.Item)">Editar</MudButton>
+                        <MudButton Size="@Size.Small" Variant="@Variant.Filled" Color="@Color.Primary" OnClick="() => OpenDialogDeletarPessoa(context.Item)">Deletar</MudButton>
+                    </MudStack>
+                </CellTemplate>
+            </TemplateColumn>
+        </Columns>
+    </MudDataGrid>
 }
 
 
 @code {
     bool success;
-    MudForm form;
     List<Pessoa> pessoas = new();
     Pessoa pessoa = new();
     const string stringKey = "pessoas";
     bool isInitialized;
+
+    private async Task OpenDialogCadastro()
+    {
+        var options = new DialogOptions()
+            {
+                CloseOnEscapeKey = true,
+            };
+
+        var dialogParameters = new DialogParameters<DialogCadastro>
+        {
+            { "addPessoa", EventCallback.Factory.Create<Pessoa>(this, AddPessoa) }
+        };
+
+        var dialog = await DialogService.ShowAsync<DialogCadastro>("Dialog Cadastro", dialogParameters, options);
+        await dialog.Result;
+    }
+
+    private async Task OpenDialogDeletarPessoa(Pessoa pessoa)
+    {
+        var options = new DialogOptions()
+            {
+                CloseOnEscapeKey = true,
+            };
+
+        var dialogParameters = new DialogParameters<DialogDeletarPessoa>
+        {
+            { x => x.pessoa, pessoa }
+        };
+
+        var dialog = await DialogService.ShowAsync<DialogDeletarPessoa>("Dialog Remover", dialogParameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await DeletarPessoa(pessoa);
+        }
+    }
+
+    private async Task OpenDialogEditarPessoa(Pessoa pessoa)
+    {
+        var options = new DialogOptions()
+            {
+                CloseOnEscapeKey = true,
+            };
+
+        var dialogParameters = new DialogParameters<DialogEditarPessoa>
+        {
+            { x => x.pessoa, pessoa }
+        };
+
+        var dialog = await DialogService.ShowAsync<DialogEditarPessoa>("Dialog Editar", dialogParameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await EditarPessoa(pessoa);
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -84,20 +139,41 @@ else
         await localStorage.SetItemAsync(stringKey, pessoas);
     }
 
-    private async Task AddPessoa()
+    private async Task AddPessoa(Pessoa pessoa)
     {
-        if (form.IsValid)
+        if (pessoas.Count != 0)
         {
-            pessoas.Add(pessoa);
-            await AtualizaLocalStorage();
-            pessoa = new();
-            await form.ResetAsync();
+            var lastID = pessoas.Last().Id;
+            pessoa.Id = lastID + 1;
         }
-    }
-
-    private async Task ResetForm()
-    {
-        await form.ResetAsync();
+        else
+        {
+            pessoa.Id = 0;
+        }
+        pessoas.Add(pessoa);
+        await AtualizaLocalStorage();
         pessoa = new();
     }
+
+    private async Task DeletarPessoa(Pessoa p)
+    {
+        pessoas.Remove(p);
+        await AtualizaLocalStorage();
+    }
+
+    private async Task EditarPessoa(Pessoa p)
+    {
+        var pessoa = pessoas.First(x => x.Id == p.Id);
+        pessoa.Nome = p.Nome;
+        pessoa.Telefone = p.Telefone;
+        pessoa.Endereço = p.Endereço;
+        await AtualizaLocalStorage();
+    }
+
+    // private async Task ClearDB()
+    // {
+    //     await localStorage.ClearAsync();
+    //     pessoas.Clear();
+    //     StateHasChanged();
+    // }
 }

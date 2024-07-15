@@ -1,0 +1,44 @@
+﻿<MudDialog>
+    <TitleContent>
+        <MudText Typo=Typo.h6>Cadastrar Pessoa</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form" Model="@pessoa">
+            <MudTextField T="string" Label="Nome" For="@(() => pessoa.Nome)" @bind-Value="@pessoa.Nome" Required="true" Immediate="true" />
+            <MudTextField T="string" Label="Telefone" For="@(() => pessoa.Telefone)" @bind-Value="@pessoa.Telefone" Required="true" Immediate="true" />
+            <MudTextField T="string" Label="Endereço" For="@(() => pessoa.Endereço)" @bind-Value="@pessoa.Endereço" Required="true" Immediate="true" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color=Color.Primary OnClick="Submit">Confirmar</MudButton>
+        <MudButton Color=Color.Error OnClick="Cancel">Cancelar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public EventCallback<Pessoa> addPessoa { get; set; }
+
+    private Pessoa pessoa;
+    private MudForm form;
+
+    protected override void OnInitialized()
+    {
+        if(pessoa == null)
+        {
+            pessoa = new();
+        }
+    }
+
+    private async Task Submit() 
+    {
+        if(form.IsValid)
+        {
+            await addPessoa.InvokeAsync(pessoa);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+    private void Cancel() => MudDialog.Cancel();
+}

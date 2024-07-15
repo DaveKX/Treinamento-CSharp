@@ -7,8 +7,27 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="Components\Layout\DialogDeletarPessoa.razor" />
+    <Content Remove="Components\Pages\Dialog_Cadastro.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
     <PackageReference Include="MudBlazor" Version="7.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Components\Pages\Dialog_Cadastro.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Components\Pages\Dialog_Cadastro.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Components\Modals\DialogEditarPessoa.razor" />
+    <None Include="Components\Modals\DialogDeletarPessoa.razor" />
+    <None Include="Components\Modals\DialogCadastro.razor" />
   </ItemGroup>
 
 </Project>

@@ -21,23 +21,12 @@ namespace DesafioUm.Objetos
         [StringLength(200, ErrorMessage = "O Endereço pode ter no máximo 200 caracteres")]
         public string Endereço { get; set; }
 
-        //public Pessoa Cadastrar(string _nome, string _endereco, string _telefone)
-        //{
-        //    Nome = _nome;
-        //    Endereço = _endereco;
-        //    Telefone = PadronizarTelefone(_telefone);
-        //    return this;
-        //}
+        public int Id { get; set; }
 
         override public string ToString()
         {
             return "[Nome: " + Nome + "; Endereço: " + Endereço + "; Telefone: " + Telefone + "]";
         }
 
-        //private string PadronizarTelefone(string telefone)
-        //{
-        //    string telFinal = "(" + telefone.Substring(0, 2) + ")" + telefone.Substring(2, 5) + "-" + telefone.Substring(7);
-        //    return telFinal;
-        //}
     }
 }
