@@ -25,21 +25,58 @@
 }
 else
 {
-    <MudDataGrid Items="@pessoas" ReadOnly="false" SortMode="@SortMode.Single" EditMode="DataGridEditMode.Form">
+    <MudDataGrid Items="@pessoas" ReadOnly="false" SortMode="@SortMode.Single">
         <Columns>
-            <PropertyColumn Property="x => x.Id" Title="ID" Editable="false" />
+            <HierarchyColumn T="Pessoa" />
+            <PropertyColumn Property="x => x.Id" Title="ID" />
             <PropertyColumn Property="x => x.Nome" />
             <PropertyColumn Property="x => x.Telefone" />
             <PropertyColumn Property="x => x.Endereco" />
             <TemplateColumn CellClass="d-flex justify-center">
                 <CellTemplate>
                     <MudStack Row>
+                        <MudButton Size="@Size.Small" Variant="@Variant.Filled" Color="@Color.Primary" OnClick="@(() => OpenAddPokemonDialog(context.Item))">Adicionar Pokémon</MudButton>
                         <MudButton Size="@Size.Small" Variant="@Variant.Filled" Color="@Color.Primary" OnClick="@(() => OpenDialogPessoa("Editar", context.Item))">Editar</MudButton>
                         <MudButton Size="@Size.Small" Variant="@Variant.Filled" Color="@Color.Primary" OnClick="@(() => OpenDialogPessoa("Deletar", context.Item))">Deletar</MudButton>
                     </MudStack>
                 </CellTemplate>
             </TemplateColumn>
         </Columns>
+        <ChildRowContent>
+            @if (context.Item.Pokemons != null && context.Item.Pokemons.Any())
+            {
+                <MudCard>
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Pokemons</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        @foreach (var pokemon in context.Item.Pokemons)
+                        {
+                            <MudPaper Class="pa-3 my-2">
+                                <MudText Typo="Typo.body1"><b>Nome:</b> @pokemon.Nome</MudText>
+                                <MudText Typo="Typo.body1"><b>Número Pokédex:</b> @pokemon.NumeroPokedex</MudText>
+                                <MudText Typo="Typo.body1"><b>Tipo:</b> @pokemon.Tipo</MudText>
+                                <MudText Typo="Typo.body1"><b>Geração:</b> @pokemon.Geracao</MudText>
+                                <MudText Typo="Typo.body1"><b>Shiny:</b> @(pokemon.Shiny ? "Sim" : "Não")</MudText>
+                                <MudStack Row>
+                                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary">Editar</MudButton>
+                                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary">Deletar</MudButton>
+                                </MudStack>
+                            </MudPaper>
+                        }
+                    </MudCardContent>
+                </MudCard>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2">Não possui pokémons.</MudText>
+            }
+        </ChildRowContent>
+        <PagerContent>
+            <MudDataGridPager T="Pessoa" />
+        </PagerContent>
     </MudDataGrid>
 }
 
@@ -51,11 +88,30 @@ else
     const string stringKey = "pessoas";
     bool isInitialized;
 
+    private async Task OpenAddPokemonDialog(Pessoa pessoa)
+    {
+        var pessoaCopia = new Pessoa
+            {
+                Id = pessoa.Id,
+                Nome = pessoa.Nome,
+                Telefone = pessoa.Telefone,
+                Endereco = pessoa.Endereco,
+                Pokemons = new List<Pokemon>(pessoa.Pokemons)
+            };
+        var parameters = new DialogParameters<DialogAddPokemon>
+        {
+            { x=>x.Pessoa, pessoaCopia },
+            { x=>x.addPokemon, EventCallback.Factory.Create<Pokemon>(this, (Pokemon p) => AddPokemon(p, pessoaCopia)) }
+        };
+        var options = new DialogOptions() { CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<DialogAddPokemon>("Adicionar Pokémon", parameters, options);
+    }
+
     private async Task OpenDialogPessoa(string acao, Pessoa pessoa = null)
     {
         var options = new DialogOptions()
             {
-                CloseOnEscapeKey = true,
+                CloseOnEscapeKey = true
             };
 
         pessoa ??= new Pessoa();
@@ -64,7 +120,8 @@ else
                 Id = pessoa.Id,
                 Nome = pessoa.Nome,
                 Telefone = pessoa.Telefone,
-                Endereco = pessoa.Endereco
+                Endereco = pessoa.Endereco,
+                Pokemons = new List<Pokemon>(pessoa.Pokemons)
             };
 
         var dialogParameters = new DialogParameters<DialogPessoa>
@@ -77,7 +134,6 @@ else
     };
 
         var dialog = await DialogService.ShowAsync<DialogPessoa>("Pessoa", dialogParameters, options);
-        await dialog.Result;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -86,6 +142,7 @@ else
         {
             await LoadPessoasFromLocalStorage();
             isInitialized = true;
+            pessoas[0].Pokemons.Add(new Pokemon());
         }
     }
 
@@ -148,6 +205,16 @@ else
     private int BuscarPessoaIndexById(int id)
     {
         return pessoas.FindIndex(p => p.Id == id);
+    }
+
+    private async Task AddPokemon(Pokemon pokemon, Pessoa p)
+    {
+        var pessoaIndex = BuscarPessoaIndexById(p.Id);
+        if (pessoaIndex == -1)
+            return;
+
+        pessoas[pessoaIndex].Pokemons.Add(pokemon);
+        await AtualizaLocalStorage();
     }
 
 }

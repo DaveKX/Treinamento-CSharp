@@ -23,6 +23,8 @@ namespace DesafioUm.Objetos
 
         public int Id { get; set; }
 
+        public List<Pokemon> Pokemons { get; set; } = [];
+
         override public string ToString()
         {
             return "[Nome: " + Nome + "; Endereço: " + Endereco + "; Telefone: " + Telefone + "]";

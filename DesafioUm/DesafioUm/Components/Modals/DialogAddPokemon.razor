@@ -1,0 +1,49 @@
+﻿<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Adicionar Pokémon</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form">
+            <MudTextField T="int" Label="Número Pokédex" @bind-Value="pokemon.NumeroPokedex" Required="true" Immediate="true"/>
+            <MudTextField T="string" Label="Nome" @bind-Value="pokemon.Nome" Required="true" Immediate="true" />
+            <MudSelect T="PokemonType" Label="Tipo" @bind-Value="pokemon.Tipo" Required="true" Immediate="true">
+                @foreach (var tipo in Enum.GetValues(typeof(PokemonType)))
+                {
+                    <MudSelectItem Value="@tipo">@tipo.ToString()</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextField T="string" Label="Geração" @bind-Value="pokemon.Geracao" Required="true" Immediate="true" />
+            <MudCheckBox @bind-Value="pokemon.Shiny">Shiny</MudCheckBox>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="AddPokemon">Adicionar</MudButton>
+        <MudButton Color="Color.Error" OnClick="Cancel">Cancelar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public Pessoa Pessoa { get; set; }
+    [Parameter] public EventCallback<Pokemon> addPokemon { get; set; }
+
+    private Pokemon pokemon = new();
+    private MudForm form;
+
+    private void AddPokemon()
+    {
+        form.Validate();
+        if (form.IsValid)
+        {
+            addPokemon.InvokeAsync(pokemon);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}
