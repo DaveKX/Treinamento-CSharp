@@ -25,9 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Components\Modals\DialogEditarPessoa.razor" />
-    <None Include="Components\Modals\DialogDeletarPessoa.razor" />
-    <None Include="Components\Modals\DialogCadastro.razor" />
+    <None Include="Components\Modals\DialogPessoa.razor" />
   </ItemGroup>
 
 </Project>

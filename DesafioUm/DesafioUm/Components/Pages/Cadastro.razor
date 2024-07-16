@@ -14,8 +14,7 @@
 <MudGrid>
     <MudItem xs="12" sm="7">
         <MudPaper Class="pa-4 mt-4">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" DropShadow="false" OnClick="OpenDialogCadastro">Adicionar</MudButton>
-            @* <MudButton Variant="Variant.Filled" Color="Color.Error" DropShadow="false" OnClick="ClearDB">Clear DB</MudButton> *@
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" DropShadow="false" OnClick="@(() => OpenDialogPessoa("Cadastrar"))">Adicionar</MudButton>
         </MudPaper>
     </MudItem>
 </MudGrid>
@@ -35,8 +34,8 @@ else
             <TemplateColumn CellClass="d-flex justify-center">
                 <CellTemplate>
                     <MudStack Row>
-                        <MudButton Size="@Size.Small" Variant="@Variant.Filled" Color="@Color.Primary" OnClick="() => OpenDialogEditarPessoa(context.Item)">Editar</MudButton>
-                        <MudButton Size="@Size.Small" Variant="@Variant.Filled" Color="@Color.Primary" OnClick="() => OpenDialogDeletarPessoa(context.Item)">Deletar</MudButton>
+                        <MudButton Size="@Size.Small" Variant="@Variant.Filled" Color="@Color.Primary" OnClick="@(() => OpenDialogPessoa("Editar", context.Item))">Editar</MudButton>
+                        <MudButton Size="@Size.Small" Variant="@Variant.Filled" Color="@Color.Primary" OnClick="@(() => OpenDialogPessoa("Deletar", context.Item))">Deletar</MudButton>
                     </MudStack>
                 </CellTemplate>
             </TemplateColumn>
@@ -52,62 +51,33 @@ else
     const string stringKey = "pessoas";
     bool isInitialized;
 
-    private async Task OpenDialogCadastro()
+    private async Task OpenDialogPessoa(string acao, Pessoa pessoa = null)
     {
         var options = new DialogOptions()
             {
                 CloseOnEscapeKey = true,
             };
 
-        var dialogParameters = new DialogParameters<DialogCadastro>
-        {
-            { "addPessoa", EventCallback.Factory.Create<Pessoa>(this, AddPessoa) }
-        };
+        pessoa ??= new Pessoa();
+        var pessoaCopia = new Pessoa
+            {
+                Id = pessoa.Id,
+                Nome = pessoa.Nome,
+                Telefone = pessoa.Telefone,
+                Endereço = pessoa.Endereço
+            };
 
-        var dialog = await DialogService.ShowAsync<DialogCadastro>("Dialog Cadastro", dialogParameters, options);
+        var dialogParameters = new DialogParameters<DialogPessoa>
+    {
+        { x => x.pessoa, pessoaCopia },
+        { x => x.acao, acao },
+        { x => x.addPessoa, EventCallback.Factory.Create<Pessoa>(this, AddPessoa) },
+        { x => x.editarPessoa, EventCallback.Factory.Create<Pessoa>(this, EditarPessoa) },
+        { x => x.deletarPessoa, EventCallback.Factory.Create<Pessoa>(this, DeletarPessoa) }
+    };
+
+        var dialog = await DialogService.ShowAsync<DialogPessoa>("Pessoa", dialogParameters, options);
         await dialog.Result;
-    }
-
-    private async Task OpenDialogDeletarPessoa(Pessoa pessoa)
-    {
-        var options = new DialogOptions()
-            {
-                CloseOnEscapeKey = true,
-            };
-
-        var dialogParameters = new DialogParameters<DialogDeletarPessoa>
-        {
-            { x => x.pessoa, pessoa }
-        };
-
-        var dialog = await DialogService.ShowAsync<DialogDeletarPessoa>("Dialog Remover", dialogParameters, options);
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
-        {
-            await DeletarPessoa(pessoa);
-        }
-    }
-
-    private async Task OpenDialogEditarPessoa(Pessoa pessoa)
-    {
-        var options = new DialogOptions()
-            {
-                CloseOnEscapeKey = true,
-            };
-
-        var dialogParameters = new DialogParameters<DialogEditarPessoa>
-        {
-            { x => x.pessoa, pessoa }
-        };
-
-        var dialog = await DialogService.ShowAsync<DialogEditarPessoa>("Dialog Editar", dialogParameters, options);
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
-        {
-            await EditarPessoa(pessoa);
-        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -163,17 +133,12 @@ else
 
     private async Task EditarPessoa(Pessoa p)
     {
-        var pessoa = pessoas.First(x => x.Id == p.Id);
-        pessoa.Nome = p.Nome;
-        pessoa.Telefone = p.Telefone;
-        pessoa.Endereço = p.Endereço;
+        var pessoaIndex = pessoas.FindIndex(x => x.Id == p.Id);
+        if(pessoaIndex != -1)
+        {
+            pessoas[pessoaIndex] = p;
+        }
         await AtualizaLocalStorage();
     }
 
-    // private async Task ClearDB()
-    // {
-    //     await localStorage.ClearAsync();
-    //     pessoas.Clear();
-    //     StateHasChanged();
-    // }
 }

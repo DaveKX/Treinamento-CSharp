@@ -1,0 +1,76 @@
+﻿<MudDialog>
+    <TitleContent>
+        <MudText Typo=Typo.h6>@dialogTitulo</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form" Model="@pessoa" ReadOnly="@isReadOnly">
+            <MudTextField T="string" Label="Nome" For="@(() => pessoa.Nome)" @bind-Value="@pessoa.Nome" Required="true" Immediate="true" />
+            <MudTextField T="string" Label="Telefone" For="@(() => pessoa.Telefone)" @bind-Value="@pessoa.Telefone" Required="true" Immediate="true" />
+            <MudTextField T="string" Label="Endereço" For="@(() => pessoa.Endereço)" @bind-Value="@pessoa.Endereço" Required="true" Immediate="true" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color=Color.Primary OnClick="Submit">Confirmar</MudButton>
+        <MudButton Color=Color.Error OnClick="Cancel">Cancelar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public Pessoa pessoa { get; set; }
+    [Parameter] public string acao { get; set; }
+    [Parameter] public EventCallback<Pessoa> addPessoa { get; set; }
+    [Parameter] public EventCallback<Pessoa> editarPessoa { get; set; }
+    [Parameter] public EventCallback<Pessoa> deletarPessoa { get; set; }
+
+    private MudForm form;
+    private bool isReadOnly;
+    private string dialogTitulo;
+
+    protected override void OnInitialized()
+    {
+        isReadOnly = acao == "Deletar";
+        dialogTitulo = acao switch
+        {
+            "Cadastrar" => "Cadastrar Pessoa",
+            "Editar" => "Editar Pessoa",
+            "Deletar" => "Deletar Pessoa",
+            _ => "Pessoa"
+        };
+    }
+
+    private void Submit()
+    {
+        bool closeSuccess = false;
+        if (acao == "Cadastrar")
+        {
+            form.Validate();
+            if (form.IsValid)
+            {
+                addPessoa.InvokeAsync(pessoa);
+                closeSuccess = true;
+            }
+        }
+        else if (acao == "Editar")
+        {
+            form.Validate();
+            if (form.IsValid)
+            {
+                editarPessoa.InvokeAsync(pessoa);
+                closeSuccess = true;
+            }
+        }
+        else if (acao == "Deletar")
+        {
+            deletarPessoa.InvokeAsync(pessoa);
+        }
+
+        if(closeSuccess || acao == "Deletar") {
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}
