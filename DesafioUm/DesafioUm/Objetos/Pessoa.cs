@@ -19,13 +19,13 @@ namespace DesafioUm.Objetos
 
         [Required(ErrorMessage = "O Endereço é obrigatório")]
         [StringLength(200, ErrorMessage = "O Endereço pode ter no máximo 200 caracteres")]
-        public string Endereço { get; set; }
+        public string Endereco { get; set; }
 
         public int Id { get; set; }
 
         override public string ToString()
         {
-            return "[Nome: " + Nome + "; Endereço: " + Endereço + "; Telefone: " + Telefone + "]";
+            return "[Nome: " + Nome + "; Endereço: " + Endereco + "; Telefone: " + Telefone + "]";
         }
 
     }

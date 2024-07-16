@@ -6,7 +6,7 @@
         <MudForm @ref="form" Model="@pessoa" ReadOnly="@isReadOnly">
             <MudTextField T="string" Label="Nome" For="@(() => pessoa.Nome)" @bind-Value="@pessoa.Nome" Required="true" Immediate="true" />
             <MudTextField T="string" Label="Telefone" For="@(() => pessoa.Telefone)" @bind-Value="@pessoa.Telefone" Required="true" Immediate="true" />
-            <MudTextField T="string" Label="Endereço" For="@(() => pessoa.Endereço)" @bind-Value="@pessoa.Endereço" Required="true" Immediate="true" />
+            <MudTextField T="string" Label="Endereço" For="@(() => pessoa.Endereco)" @bind-Value="@pessoa.Endereco" Required="true" Immediate="true" />
         </MudForm>
     </DialogContent>
     <DialogActions>

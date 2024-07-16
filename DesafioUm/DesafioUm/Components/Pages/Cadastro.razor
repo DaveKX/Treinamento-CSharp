@@ -30,7 +30,7 @@ else
             <PropertyColumn Property="x => x.Id" Title="ID" Editable="false" />
             <PropertyColumn Property="x => x.Nome" />
             <PropertyColumn Property="x => x.Telefone" />
-            <PropertyColumn Property="x => x.Endereço" />
+            <PropertyColumn Property="x => x.Endereco" />
             <TemplateColumn CellClass="d-flex justify-center">
                 <CellTemplate>
                     <MudStack Row>
@@ -64,7 +64,7 @@ else
                 Id = pessoa.Id,
                 Nome = pessoa.Nome,
                 Telefone = pessoa.Telefone,
-                Endereço = pessoa.Endereço
+                Endereco = pessoa.Endereco
             };
 
         var dialogParameters = new DialogParameters<DialogPessoa>
@@ -127,18 +127,27 @@ else
 
     private async Task DeletarPessoa(Pessoa p)
     {
-        pessoas.Remove(p);
+        var pessoaIndex = BuscarPessoaIndexById(p.Id);
+        if (pessoaIndex == -1)
+            return;
+
+        pessoas.RemoveAt(pessoaIndex);
         await AtualizaLocalStorage();
     }
 
     private async Task EditarPessoa(Pessoa p)
     {
-        var pessoaIndex = pessoas.FindIndex(x => x.Id == p.Id);
-        if(pessoaIndex != -1)
-        {
-            pessoas[pessoaIndex] = p;
-        }
+        var pessoaIndex = BuscarPessoaIndexById(p.Id);
+        if (pessoaIndex == -1)
+            return;
+
+        pessoas[pessoaIndex] = p;
         await AtualizaLocalStorage();
+    }
+
+    private int BuscarPessoaIndexById(int id)
+    {
+        return pessoas.FindIndex(p => p.Id == id);
     }
 
 }
