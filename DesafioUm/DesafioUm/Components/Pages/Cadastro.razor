@@ -1,8 +1,6 @@
 ﻿@using System.Text.RegularExpressions
 @using System.ComponentModel.DataAnnotations
 
-<MudDialogProvider />
-
 @page "/cadastro"
 @rendermode InteractiveServer
 @inject ILocalStorageService localStorage
@@ -142,7 +140,6 @@ else
         {
             await LoadPessoasFromLocalStorage();
             isInitialized = true;
-            pessoas[0].Pokemons.Add(new Pokemon());
         }
     }
 
@@ -212,7 +209,8 @@ else
         var pessoaIndex = BuscarPessoaIndexById(p.Id);
         if (pessoaIndex == -1)
             return;
-
+        pokemon.Pessoa = p;
+        pokemon.PessoaId = p.Id;
         pessoas[pessoaIndex].Pokemons.Add(pokemon);
         await AtualizaLocalStorage();
     }

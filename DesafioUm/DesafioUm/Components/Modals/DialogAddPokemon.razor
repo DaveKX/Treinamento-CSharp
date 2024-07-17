@@ -7,7 +7,7 @@
             <MudTextField T="int" Label="Número Pokédex" @bind-Value="pokemon.NumeroPokedex" Required="true" Immediate="true"/>
             <MudTextField T="string" Label="Nome" @bind-Value="pokemon.Nome" Required="true" Immediate="true" />
             <MudSelect T="PokemonType" Label="Tipo" @bind-Value="pokemon.Tipo" Required="true" Immediate="true">
-                @foreach (var tipo in Enum.GetValues(typeof(PokemonType)))
+                @foreach (PokemonType tipo in Enum.GetValues(typeof(PokemonType)))
                 {
                     <MudSelectItem Value="@tipo">@tipo.ToString()</MudSelectItem>
                 }
